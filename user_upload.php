@@ -42,11 +42,16 @@ while(true){
       case "--file [csv file name]":
         if(check_table_existence($conn)==false){
           create_table();
-          insert_records();
-        }else{
+          insert_records($conn);
+        }
+        else{
           insert_records($conn);
         }
         break;
+
+      case "--dry_run":
+        // file_directive($conn,"drydir");
+      break;
 
       case "--create_table":
         create_table();
@@ -114,40 +119,61 @@ function create_table(){
 
 function insert_records($conn){
   $file = fopen("users.csv", "r");
-  while(($row=fgetcsv($file)) != false)
-  {
-    $name=mysqli_real_escape_string($conn,trim(ucfirst(strtolower($row[0]))));
-    $surname=mysqli_real_escape_string($conn,trim(ucfirst(strtolower($row[1]))));
-    $email=trim(strtolower($row[2]));
-
-    $validateEmail=check_email_validity($email);
-    if($validateEmail==true){
-
-      $email=mysqli_real_escape_string($conn,trim(strtolower($row[2])));
-
-      $checkEmailAlreadyInserted="select email from users where email='".$email."'";
-      $result=$conn->query($checkEmailAlreadyInserted);
-      if($result->num_rows == 0){
-        // echo "Correct Email\n";
-        $conn=create_database_connection();
-        $sql="insert into users(name,surname,email) values('".$name."','".$surname."','".$email."')";
-        if($conn->query($sql)===TRUE){
-          // echo "Successfully Inserted\n";
-        }else{
-          echo "Error Occured while inserting: ". $conn->error;
-
-        }
-      }
-      else{
-        // echo "Email Already Inserted\n";
-      }
+  $firstLine=true;
+  $emailErrosFound=false;
+  while(($row=fgetcsv($file)) != false){
+    if($firstLine){
+      //Assuming first line of any csv file contains the header(name,surname,email)
+      $firstLine=false;
+      continue;
     }else{
-      echo "Invalid Email Found: ".$email."\n";
+      $email=trim(strtolower($row[2]));
+      if(check_email_validity($email)==false){
+        fwrite(STDOUT,"Invalid Email Found: ".$email."\n");
+        $emailErrosFound=true;
+      }
     }
-    // $sql="insert into users(name,surname,email) values($name)"
-    // print_r(fgetcsv($file));
   }
-  fclose($file);
+
+  //start from the second line of the csv file
+  fseek($file,1);
+
+  if($emailErrosFound==false){
+
+    while(($row=fgetcsv($file)) != false)
+    {
+      $name=mysqli_real_escape_string($conn,trim(ucfirst(strtolower($row[0]))));
+      $surname=mysqli_real_escape_string($conn,trim(ucfirst(strtolower($row[1]))));
+      $email=trim(strtolower($row[2]));
+
+      $validateEmail=check_email_validity($email);
+      if($validateEmail==true){
+
+        $email=mysqli_real_escape_string($conn,trim(strtolower($row[2])));
+
+        $checkEmailAlreadyInserted="select email from users where email='".$email."'";
+        $result=$conn->query($checkEmailAlreadyInserted);
+        if($result->num_rows == 0){
+          // echo "Correct Email\n";
+          $conn=create_database_connection();
+          $sql="insert into users(name,surname,email) values('".$name."','".$surname."','".$email."')";
+          if($conn->query($sql)===TRUE){
+            // echo "Successfully Inserted\n";
+          }else{
+            echo "Error Occured while inserting: ". $conn->error;
+
+          }
+        }
+        else{
+          // echo "Email Already Inserted\n";
+        }
+      }else{
+        // echo "Invalid Email Found: ".$email."\n";
+        // fwrite(STDOUT,"Invalid Email Found: ".$email."\n");
+      }
+    }
+    fclose($file);
+  }
 }
 
 //CHECK IF THE USER TABLE HAS ALREADY CREATED
