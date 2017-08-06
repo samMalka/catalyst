@@ -17,7 +17,7 @@ $sql = "CREATE DATABASE IF NOT EXISTS $dbname";
 if ($conn->query($sql) === TRUE) {
     // echo "Database dbname created successfully";
 } else {
-    // echo "Error creating dbname database: " . $conn->error;
+    echo "Error creating dbname database: " . $conn->error;
 }
 
 $conn=create_database_connection();
@@ -59,9 +59,9 @@ while(true){
         $file = fopen("users.csv", "r");
         check_email_validity($conn,$file);
         fclose($file);
-        getUsername();
-        getPassword();
-        getserverName();
+        echo getUsername();
+        echo getPassword();
+        echo getserverName();
       break;
 
       case "--create_table":
