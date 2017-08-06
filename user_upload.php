@@ -20,6 +20,10 @@ if ($conn->query($sql) === TRUE) {
     echo "Error creating dbname database: " . $conn->error;
 }
 
+$conn=create_database_connection();
+$tableExist=check_table_existence($conn);
+echo "Table Exist: ".$tableExist."\n";
+
 while(true){
     echo "Please enter an option: ";
     $userinput = fgets(STDIN);
@@ -61,6 +65,36 @@ while(true){
         echo "Invalid Option Entered. \n";
         break;
     }
+}
+
+
+
+function create_database_connection(){
+
+  global $servername,$username,$password,$dbname;
+  // Create connection
+  $conn = new mysqli($servername, $username, $password, $dbname);
+  // Check connection
+  if ($conn->connect_error) {
+      die("Connection failed: " . $conn->connect_error);
+  }
+  return $conn;
+}
+
+//CHECK IF THE USER TABLE HAS ALREADY CREATED
+function check_table_existence($conn){
+  $tableExistence=false;
+  $sql="show tables like 'users'";
+  $result=$conn->query($sql);
+  if($result->num_rows==1){
+    // echo "Table is already created";
+    $tableExistence=true;
+  }else{
+    // echo "Table is created";
+    $tableExistence=false;
+  }
+
+  return $tableExistence;
 }
 
 ?>
