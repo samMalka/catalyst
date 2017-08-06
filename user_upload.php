@@ -40,13 +40,19 @@ while(true){
         break;
 
       case "--file [csv file name]":
+        $file = fopen("users.csv", "r");
         if(check_table_existence($conn)==false){
           create_table();
-          insert_records($conn);
+          if(check_email_validity($conn,$file)==false){
+            insert_records($conn,$file);
+          }
         }
         else{
-          insert_records($conn);
+          if(check_email_validity($conn,$file)==false){
+            insert_records($conn,$file);
+          }
         }
+        fclose($file);
         break;
 
       case "--dry_run":
@@ -117,62 +123,39 @@ function create_table(){
 }
 
 
-function insert_records($conn){
-  $file = fopen("users.csv", "r");
-  $firstLine=true;
-  $emailErrosFound=false;
-  while(($row=fgetcsv($file)) != false){
-    if($firstLine){
-      //Assuming first line of any csv file contains the header(name,surname,email)
-      $firstLine=false;
-      continue;
-    }else{
-      $email=trim(strtolower($row[2]));
-      if(check_email_validity($email)==false){
-        fwrite(STDOUT,"Invalid Email Found: ".$email."\n");
-        $emailErrosFound=true;
-      }
-    }
-  }
+function insert_records($conn,$file){
 
   //start from the second line of the csv file
   fseek($file,1);
 
-  if($emailErrosFound==false){
+  while(($row=fgetcsv($file)) != false)
+  {
+    $name=mysqli_real_escape_string($conn,trim(ucfirst(strtolower($row[0]))));
+    $surname=mysqli_real_escape_string($conn,trim(ucfirst(strtolower($row[1]))));
+    $email=trim(strtolower($row[2]));
 
-    while(($row=fgetcsv($file)) != false)
-    {
-      $name=mysqli_real_escape_string($conn,trim(ucfirst(strtolower($row[0]))));
-      $surname=mysqli_real_escape_string($conn,trim(ucfirst(strtolower($row[1]))));
-      $email=trim(strtolower($row[2]));
+    // $validateEmail=check_email_validity($email);
+    // if($validateEmail==true){
 
-      $validateEmail=check_email_validity($email);
-      if($validateEmail==true){
+      $email=mysqli_real_escape_string($conn,trim(strtolower($row[2])));
 
-        $email=mysqli_real_escape_string($conn,trim(strtolower($row[2])));
+      $checkEmailAlreadyInserted="select email from users where email='".$email."'";
+      $result=$conn->query($checkEmailAlreadyInserted);
+      if($result->num_rows == 0){
+        // echo "Correct Email\n";
+        $conn=create_database_connection();
+        $sql="insert into users(name,surname,email) values('".$name."','".$surname."','".$email."')";
+        if($conn->query($sql)===TRUE){
+          // echo "Successfully Inserted\n";
+        }else{
+          echo "Error Occured while inserting: ". $conn->error;
 
-        $checkEmailAlreadyInserted="select email from users where email='".$email."'";
-        $result=$conn->query($checkEmailAlreadyInserted);
-        if($result->num_rows == 0){
-          // echo "Correct Email\n";
-          $conn=create_database_connection();
-          $sql="insert into users(name,surname,email) values('".$name."','".$surname."','".$email."')";
-          if($conn->query($sql)===TRUE){
-            // echo "Successfully Inserted\n";
-          }else{
-            echo "Error Occured while inserting: ". $conn->error;
-
-          }
         }
-        else{
-          // echo "Email Already Inserted\n";
-        }
-      }else{
-        // echo "Invalid Email Found: ".$email."\n";
-        // fwrite(STDOUT,"Invalid Email Found: ".$email."\n");
       }
-    }
-    fclose($file);
+      else{
+        // echo "Email Already Inserted\n";
+      }
+
   }
 }
 
@@ -192,15 +175,25 @@ function check_table_existence($conn){
   return $tableExistence;
 }
 
-function check_email_validity($email){
-  $emailValidity=false;
-  if(filter_var($email,FILTER_VALIDATE_EMAIL)){
-    $emailValidity=true;
-  }else{
-    $emailValidity=false;
-  }
+function check_email_validity($conn,$file){
 
-  return $emailValidity;
+  $firstLine=true;
+  $emailErrosFound=false;
+  while(($row=fgetcsv($file)) != false){
+    if($firstLine){
+      //Assuming first line of any csv file contains the header(name,surname,email)
+      $firstLine=false;
+      continue;
+    }else{
+      $email=trim(strtolower($row[2]));
+      if((filter_var($email,FILTER_VALIDATE_EMAIL))==false){
+        fwrite(STDOUT,"Invalid Email Found: ".$email."\n");
+        $emailErrosFound=true;
+        break;
+      }
+    }
+  }
+  return $emailErrosFound;
 }
 
 ?>
