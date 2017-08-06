@@ -56,8 +56,12 @@ while(true){
         break;
 
       case "--dry_run":
-        check_email_validity($conn);
-        
+        $file = fopen("users.csv", "r");
+        check_email_validity($conn,$file);
+        fclose($file);
+        getUsername();
+        getPassword();
+        getserverName();
       break;
 
       case "--create_table":
@@ -65,15 +69,15 @@ while(true){
         break;
 
       case "-u":
-        echo $username."\n";
+        echo getUsername();
         break;
 
       case "-p":
-        echo $password."\n";
+        echo getPassword();
         break;
 
       case "-h":
-        echo $servername."\n";
+        echo getserverName();
         break;
 
       default:
@@ -195,6 +199,21 @@ function check_email_validity($conn,$file){
     }
   }
   return $emailErrosFound;
+}
+
+function getUsername(){
+  global $username;
+  return "Username: ".$username."\n";
+}
+
+function getPassword(){
+  global $password;
+  return "Password: ".$password."\n";
+}
+
+function getserverName(){
+  global $servername;
+  return "Host: ".$servername."\n";
 }
 
 ?>
