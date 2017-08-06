@@ -43,6 +43,10 @@ while(true){
         echo "users.csv\n";
         break;
 
+      case "--dry_run":
+        echo "dry run\n";
+        break;
+
       case "--create_table":
         create_table();
         break;
