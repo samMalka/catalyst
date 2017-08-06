@@ -56,7 +56,8 @@ while(true){
         break;
 
       case "--dry_run":
-        // file_directive($conn,"drydir");
+        check_email_validity($conn);
+        
       break;
 
       case "--create_table":
