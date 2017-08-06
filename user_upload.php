@@ -22,13 +22,6 @@ if ($conn->query($sql) === TRUE) {
 
 $conn=create_database_connection();
 
-if(check_table_existence($conn)==false){
-  create_table();
-  insert_records();
-}else{
-  insert_records($conn);
-}
-
 while(true){
     echo "Please enter an option: ";
     $userinput = fgets(STDIN);
@@ -47,7 +40,12 @@ while(true){
         break;
 
       case "--file [csv file name]":
-        echo "users.csv\n";
+        if(check_table_existence($conn)==false){
+          create_table();
+          insert_records();
+        }else{
+          insert_records($conn);
+        }
         break;
 
       case "--create_table":
