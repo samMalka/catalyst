@@ -21,8 +21,6 @@ if ($conn->query($sql) === TRUE) {
 }
 
 $conn=create_database_connection();
-$tableExist=check_table_existence($conn);
-echo "Table Exist: ".$tableExist."\n";
 
 while(true){
     echo "Please enter an option: ";
@@ -46,7 +44,7 @@ while(true){
         break;
 
       case "--create_table":
-        echo "run create table function\n";
+        create_table();
         break;
 
       case "-u":
@@ -79,6 +77,34 @@ function create_database_connection(){
       die("Connection failed: " . $conn->connect_error);
   }
   return $conn;
+}
+
+//Create the User Table
+function create_table(){
+
+  global $conn;
+
+  $tableExistenceStatus=check_table_existence($conn);
+  if($tableExistenceStatus==true){
+    //dropping the table inorder to recreate the table
+    $sql="drop table users";
+    if($conn->query($sql)==true){
+      //echo "Table Dropped\n";
+    }else{
+      //echo "Error, While dropping the table\n";
+    }
+  }
+  $sql = "CREATE TABLE users (
+  name VARCHAR(50) NOT NULL,
+  surname VARCHAR(50) NOT NULL,
+  email VARCHAR(200) PRIMARY KEY
+  )";
+
+  if ($conn->query($sql) === TRUE) {
+      // echo "Table Users created successfully\n";
+  } else {
+      // echo "Error creating users table: " . $conn->error;
+  }
 }
 
 //CHECK IF THE USER TABLE HAS ALREADY CREATED
