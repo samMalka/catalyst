@@ -131,6 +131,7 @@ function create_table(){
 function insert_records($conn,$file){
 
   //start from the second line of the csv file
+  fseek($file,1);
   $firstLine=true;
 
   while(($row=fgetcsv($file)) != false)
