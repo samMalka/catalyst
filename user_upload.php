@@ -21,6 +21,7 @@ if ($conn->query($sql) === TRUE) {
 }
 
 $conn=create_database_connection();
+insert_records($conn);
 
 while(true){
     echo "Please enter an option: ";
@@ -52,15 +53,15 @@ while(true){
         break;
 
       case "-u":
-        echo $username."\n";
+        echo $username;
         break;
 
       case "-p":
-        echo $password."\n";
+        echo $password;
         break;
 
       case "-h":
-        echo $servername."\n";
+        echo $servername;
         break;
 
       default:
@@ -127,4 +128,34 @@ function check_table_existence($conn){
   return $tableExistence;
 }
 
+function insert_records($conn){
+  $file = fopen("users.csv", "r");
+  while(($row=fgetcsv($file)) != false)
+  {
+    $name=mysqli_real_escape_string($conn,trim(ucfirst(strtolower($row[0]))));
+    $surname=mysqli_real_escape_string($conn,trim(ucfirst(strtolower($row[1]))));
+    $email=trim(strtolower($row[2]));
+
+    $validateEmail=check_email_validity($email);
+    if($validateEmail==true){
+      echo "Valid Email\n";
+    }else{
+      echo "Invalid Email Found: ".$email."\n";
+    }
+    // $sql="insert into users(name,surname,email) values($name)"
+    // print_r(fgetcsv($file));
+  }
+  fclose($file);
+}
+
+function check_email_validity($email){
+  $emailValidity=false;
+  if(filter_var($email,FILTER_VALIDATE_EMAIL)){
+    $emailValidity=true;
+  }else{
+    $emailValidity=false;
+  }
+
+  return $emailValidity;
+}
 ?>
